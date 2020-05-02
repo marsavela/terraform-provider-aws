@@ -197,6 +197,16 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 										Optional: true,
 										Default:  "/",
 									},
+									"transit_encryption": {
+										Type:     schema.TypeString,
+										ForceNew: true,
+										Optional: true,
+									},
+									"transit_encryption_port": {
+										Type:     schema.TypeInt,
+										ForceNew: true,
+										Optional: true,
+									},
 								},
 							},
 						},

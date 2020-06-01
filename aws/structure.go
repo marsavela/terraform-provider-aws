@@ -150,15 +150,37 @@ func expandEcsVolumes(configured []interface{}) ([]*ecs.Volume, error) {
 
 		efsConfig, ok := data["efs_volume_configuration"].([]interface{})
 		if ok && len(efsConfig) > 0 {
-			config := efsConfig[0].(map[string]interface{})
+			efsconfig := efsConfig[0].(map[string]interface{})
 			l.EfsVolumeConfiguration = &ecs.EFSVolumeConfiguration{}
 
-			if v, ok := config["file_system_id"].(string); ok && v != "" {
+			if v, ok := efsconfig["file_system_id"].(string); ok && v != "" {
 				l.EfsVolumeConfiguration.FileSystemId = aws.String(v)
 			}
 
-			if v, ok := config["root_directory"].(string); ok && v != "" {
+			if v, ok := efsconfig["root_directory"].(string); ok && v != "/" {
 				l.EfsVolumeConfiguration.RootDirectory = aws.String(v)
+			}
+
+			if v, ok := efsconfig["transit_encryption"].(string); ok && v != "" {
+				l.EfsVolumeConfiguration.TransitEncryption = aws.String(v)
+			}
+
+			if v, ok := efsconfig["transit_encryption_port"].(int64); ok && v != 0 {
+				l.EfsVolumeConfiguration.TransitEncryptionPort = aws.Int64(v)
+			}
+
+			authConfig, ok := efsconfig["authorization_config"].([]interface{})
+			if ok && len(authConfig) > 0 {
+				authconfig := authConfig[0].(map[string]interface{})
+				l.EfsVolumeConfiguration.AuthorizationConfig = &ecs.EFSAuthorizationConfig{}
+
+				if v, ok := authconfig["access_point_id"].(string); ok && v != "" {
+					l.EfsVolumeConfiguration.AuthorizationConfig.AccessPointId = aws.String(v)
+				}
+
+				if v, ok := authconfig["iam"].(string); ok && v != "" {
+					l.EfsVolumeConfiguration.AuthorizationConfig.Iam = aws.String(v)
+				}
 			}
 		}
 
@@ -748,6 +770,36 @@ func flattenEFSVolumeConfiguration(config *ecs.EFSVolumeConfiguration) []interfa
 		if v := config.RootDirectory; v != nil {
 			m["root_directory"] = aws.StringValue(v)
 		}
+
+		if v := config.TransitEncryption; v != nil {
+			m["transit_encryption"] = aws.StringValue(v)
+		}
+
+		if v := config.TransitEncryptionPort; v != nil {
+			m["transit_encryption_port"] = aws.Int64Value(v)
+		}
+
+		if v := config.AuthorizationConfig; v != nil {
+			m["authorization_config"] = flattenEFSAuthorizationConfig(config.AuthorizationConfig)
+		}
+	}
+
+	items = append(items, m)
+	return items
+}
+
+func flattenEFSAuthorizationConfig(config *ecs.EFSAuthorizationConfig) []interface{} {
+	var items []interface{}
+	m := make(map[string]interface{})
+	if config != nil {
+		if v := config.AccessPointId; v != nil {
+			m["access_point_id"] = aws.StringValue(v)
+		}
+
+		if v := config.Iam; v != nil {
+			m["iam"] = aws.StringValue(v)
+		}
+
 	}
 
 	items = append(items, m)

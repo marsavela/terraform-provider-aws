@@ -195,12 +195,12 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 										Type:     schema.TypeString,
 										ForceNew: true,
 										Optional: true,
-										Default:  "/",
 									},
 									"transit_encryption": {
-										Type:     schema.TypeBool,
+										Type:     schema.TypeString,
 										ForceNew: true,
 										Optional: true,
+										Default:  "DISABLED",
 									},
 									"transit_encryption_port": {
 										Type:         schema.TypeInt,
@@ -211,7 +211,6 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 									"authorization_config": {
 										Type:     schema.TypeList,
 										Optional: true,
-										ForceNew: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -220,10 +219,11 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 													ForceNew: true,
 													Optional: true,
 												},
-												"iam_enabled": {
-													Type:     schema.TypeBool,
+												"iam": {
+													Type:     schema.TypeString,
 													ForceNew: true,
 													Optional: true,
+													Default:  "DISABLED",
 												},
 											},
 										},
@@ -630,6 +630,26 @@ func resourceAwsEcsTaskDefinitionVolumeHash(v interface{}) int {
 
 		if v, ok := m["root_directory"]; ok && v.(string) != "" {
 			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		}
+
+		if v, ok := m["transit_encryption"]; ok && v.(string) != "" {
+			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		}
+
+		if v, ok := m["transit_encryption_port"]; ok && v.(int) != 0 {
+			buf.WriteString(fmt.Sprintf("%d-", v.(int)))
+		}
+
+		if v, ok := m["authorization_config"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			m := v.([]interface{})[0].(map[string]interface{})
+
+			if v, ok := m["access_point_id"]; ok && v.(string) != "" {
+				buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+			}
+
+			if v, ok := m["iam"]; ok && v.(string) != "" {
+				buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+			}
 		}
 	}
 
